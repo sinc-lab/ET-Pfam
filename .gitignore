@@ -1,0 +1,5 @@
+results/
+models/
+data/full/
+data/embeddings/
+__pycache__/
