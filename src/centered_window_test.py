@@ -42,11 +42,11 @@ def centered_window_test(config, model, output_folder, is_ensemble=False,
 
     if is_ensemble:
         # Get the ensemble predictions
-        _, pred_bin = model.pred(window_type='centered')
+        _, pred_bin = model.pred(partition='test')
 
         # Collect ground truth references
         ref = [] 
-        for _, y, *_ in tqdm(test_loader, desc="Collecting ground truth"): 
+        for _, y, *_ in tqdm(test_loader, desc="Collecting ground truth"):
             ref.append(y.cpu())
         ref = tr.cat(ref)
         ref_bin = tr.argmax(ref, dim=1)

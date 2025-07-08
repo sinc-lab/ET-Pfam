@@ -19,7 +19,6 @@ def predict(net, emb, window_len, use_softmax=True, step=8):
         pred: The predictions from the model.
     """
     L = emb.shape[1]
-    pred = []
     centers = np.arange(0, L, step)
     batch = tr.zeros((len(centers), emb.shape[0], window_len), dtype=tr.float)
 

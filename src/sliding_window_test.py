@@ -46,7 +46,7 @@ def _predict_coverage(categories, pred, start, end, gold_label):
     return [prediction, score.item(), prediction == gold_label]
 
 
-def sliding_window_test(config, model, output_path):
+def sliding_window_test(config, model, output_path, is_ensemble=False):
     """
     Run sliding window prediction on a test dataset and evaluate three prediction strategies:
     max score, area under curve, and coverage-based majority voting.
@@ -80,8 +80,13 @@ def sliding_window_test(config, model, output_path):
         emb = pickle.load(open(emb_file, "rb")).squeeze().float()
 
         # Get the predictions from the model using the sliding window approach
-        centers, pred = predict(model, emb, config['window_len'], 
-                                use_softmax=config['soft_max'], step=config['step'])
+        if is_ensemble:
+            # For ensemble models, use the ensemble prediction method
+            centers, pred = model.pred_sliding(emb, step=config['step'], use_softmax=config['soft_max'])
+        else:
+            # For single models, use the predict function
+            centers, pred = predict(model, emb, config['window_len'], 
+                                    use_softmax=config['soft_max'], step=config['step'])
 
         # Get labeled domains for the current PID
         ref = dataset[dataset.PID == pid].sort_values(by="start")

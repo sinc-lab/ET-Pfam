@@ -62,12 +62,12 @@ def run_ensemble_tests(models_path, config, voting_strategy, output_path,
     if model_weights_path:
         # Use the provided ensemble weights if specified
         print(f"Using model weights from: {model_weights_path}")
-        ensemble = EnsembleModel(models_path, emb_path, data_path, cat_path, 
+        ensemble = EnsembleModel(models_path, config,
                            voting_strategy, model_weights_path=model_weights_path)
     else:
         # Fit the ensemble if no weights are provided
         print("Fitting ensemble model...")
-        ensemble = EnsembleModel(models_path, emb_path, data_path, cat_path, voting_strategy)
+        ensemble = EnsembleModel(models_path, config, voting_strategy)
         ensemble.fit()
 
     # Test the ensemble with centered and sliding window methods
@@ -76,15 +76,15 @@ def run_ensemble_tests(models_path, config, voting_strategy, output_path,
                          voting_strategy=voting_strategy)
 
     print("Running sliding window test...")
-    _, SwA, SwC = sliding_window_test(config, ensemble, output_path)
+    _, SwA, SwC = sliding_window_test(config, ensemble, output_path, is_ensemble=True)
 
     return CwS, SwA, SwC
 
 if __name__ == "__main__":
     args = parser()
 
-    valid_strategies = ['simple_voting', 'score_voting', 'weighted_model', 
-                        'weighted_families', 'all']
+    valid_strategies = [ 'weighted_families','simple_voting', 'score_voting', 'weighted_model', 
+                       'all']
     if args.voting_strategy not in valid_strategies:
         raise ValueError(f"Invalid voting strategy: {args.voting_strategy}. " \
                          f"Choose from {valid_strategies[:-1]} or 'all'.")
