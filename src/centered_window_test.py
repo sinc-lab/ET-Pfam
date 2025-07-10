@@ -8,7 +8,7 @@ from sklearn.metrics import accuracy_score
 from src.dataset import PFamDataset
 
 def centered_window_test(config, model, output_folder, is_ensemble=False,
-                         voting_strategy=None):
+                         voting_strategy=None, partition='test'):
     """
     Evaluates a model (individual or ensemble) on the test dataset using the 
     centered window technique.
@@ -32,9 +32,9 @@ def centered_window_test(config, model, output_folder, is_ensemble=False,
         win_len, batch_size = config.get("window_len", 32), config.get("batch_size", 32)
 
     # Load the dataset
-    test_data = PFamDataset(f"{data_path}test.csv", emb_path, categories,
+    data = PFamDataset(f"{data_path}{partition}.csv", emb_path, categories,
                             win_len=win_len, is_training=False)
-    test_loader = DataLoader(test_data,
+    loader = DataLoader(data,
                              batch_size=batch_size,
                              num_workers=config.get("nworkers", 1))
 
@@ -42,11 +42,11 @@ def centered_window_test(config, model, output_folder, is_ensemble=False,
 
     if is_ensemble:
         # Get the ensemble predictions
-        _, pred_bin = model.pred(partition='test')
+        _, pred_bin = model.pred(partition=partition)
 
         # Collect ground truth references
         ref = [] 
-        for _, y, *_ in tqdm(test_loader, desc="Collecting ground truth"):
+        for _, y, *_ in tqdm(loader, desc="Collecting ground truth"):
             ref.append(y.cpu())
         ref = tr.cat(ref)
         ref_bin = tr.argmax(ref, dim=1)
@@ -57,7 +57,7 @@ def centered_window_test(config, model, output_folder, is_ensemble=False,
 
     else: 
         # Get the base model predictions
-        _, err_rate, pred, ref, *_ = model.pred(test_loader)
+        _, err_rate, pred, ref, *_ = model.pred(loader)
 
         ref_bin = tr.argmax(ref, dim=1)
         pred_bin = tr.argmax(pred, dim=1)
@@ -70,7 +70,7 @@ def centered_window_test(config, model, output_folder, is_ensemble=False,
         print(f"Strategy:     {voting_strategy}")
 
     # Save stats to CSV
-    stats_file = os.path.join(output_folder, "centered_test.csv")
+    stats_file = os.path.join(output_folder, f"centered_{partition}.csv")
     stats = {
         "Error Rate (%)": [f"{err_rate * 100:.2f}"],
         "Total Errors": [f"{total_errors}/{len(ref_bin)}"]

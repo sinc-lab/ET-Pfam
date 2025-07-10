@@ -46,7 +46,7 @@ def _predict_coverage(categories, pred, start, end, gold_label):
     return [prediction, score.item(), prediction == gold_label]
 
 
-def sliding_window_test(config, model, output_path, is_ensemble=False):
+def sliding_window_test(config, model, output_path, is_ensemble=False, partition='test'):
     """
     Run sliding window prediction on a test dataset and evaluate three prediction strategies:
     max score, area under curve, and coverage-based majority voting.
@@ -61,7 +61,7 @@ def sliding_window_test(config, model, output_path, is_ensemble=False):
     categories = [line.strip() for line in open(cat_path)]
 
     # Load the test dataset
-    dataset = pd.read_csv(f"{config['data_path']}test.csv")
+    dataset = pd.read_csv(f"{config['data_path']}{partition}.csv")
     # print(f"Total rows: {len(dataset)}")
 
     errors = []
@@ -170,7 +170,7 @@ def sliding_window_test(config, model, output_path, is_ensemble=False):
         ]
     }
 
-    stats_file = os.path.join(output_path, "sliding_window_test.csv")
+    stats_file = os.path.join(output_path, f"sliding_window_{partition}.csv")
     stats_df = pd.DataFrame(stats)
     stats_df.to_csv(stats_file, index=False)
 

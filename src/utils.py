@@ -82,7 +82,7 @@ class ResultsTable():
             "SwA": round(swa, 2),
             "SwC": round(swc, 2)
         }
-        self.df = pd.concat([self.df, pd.DataFrame([new_row])], ignore_index=True)
+        self.df.loc[len(self.df)] = new_row
 
     def save(self, filepath):
         """Save the results DataFrame to a CSV file"""

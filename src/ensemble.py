@@ -10,7 +10,8 @@ import torch.multiprocessing
 torch.multiprocessing.set_sharing_strategy('file_system')
 
 class EnsembleModel(nn.Module):
-    def __init__(self, models_path, config, voting_strategy, model_weights_path=None):
+    def __init__(self, models_path, config, voting_strategy, ensemble_weights_path=None, 
+                 exp_name=None):
         super(EnsembleModel, self).__init__()
 
         # Load model paths
@@ -20,6 +21,7 @@ class EnsembleModel(nn.Module):
         self.data_path = config['data_path']
         self.voting_strategy = voting_strategy
         self.path = models_path
+        self.weights_file = None
 
         # Load categories
         cat_path = os.path.join(self.data_path, "categories.txt")
@@ -60,25 +62,15 @@ class EnsembleModel(nn.Module):
             self.models.append(model)
         
         # Initialize model weights based on voting strategy
-        if self.voting_strategy == 'weighted_model': 
-            weights_ensemble = f"{model_weights_path}ensemble_model_weights.pt"
-            if model_weights_path and os.path.exists(weights_ensemble):
-                self.model_weights = nn.Parameter(tr.load(weights_ensemble))
-                print(f"Loaded model weights from {model_weights_path}")
-            else:
-                self.model_weights = nn.Parameter(tr.rand(len(model_dirs)))
-                if model_weights_path:
-                    print(f"Warning: {model_weights_path} not found, using random init.")
-
-        elif self.voting_strategy == 'weighted_families': 
-            weights_ensemble = f"{model_weights_path}ensemble_family_weights.pt"
-            if model_weights_path and os.path.exists(weights_ensemble):
-                self.family_weights = nn.Parameter(tr.load(weights_ensemble))
-                print(f"Loaded family weights from {model_weights_path}")
-            else:
-                self.family_weights = nn.Parameter(tr.rand(len(model_dirs), len(categories)))
-                if model_weights_path:
-                    print(f"Warning: {model_weights_path} not found, using random init.")
+        if self.voting_strategy in ['weighted_model', 'weighted_families']:
+            weights, weights_file = self._initialize_weights(model_dirs, 
+                                                             ensemble_weights_path,
+                                                             exp_name)
+            self.weights_file = weights_file
+            if self.voting_strategy == 'weighted_model':
+                self.model_weights = weights
+            elif self.voting_strategy == 'weighted_families':
+                self.family_weights = weights
 
     def fit(self):
         if self.voting_strategy in ['weighted_model', 'weighted_families']:
@@ -112,8 +104,8 @@ class EnsembleModel(nn.Module):
                 loss.backward()
                 optimizer.step()
             
-            tr.save(self.model_weights.detach().cpu(), f'{self.path}/ensemble_model_weights.pt')
-            print("Saved model weights to ensemble_model_weights.pt")
+            tr.save(self.model_weights.detach().cpu(), self.weights_file)
+            print(f"Saved model weights to {self.weights_file}")
 
         elif self.voting_strategy == 'weighted_families':
             criterion = nn.CrossEntropyLoss()
@@ -127,8 +119,8 @@ class EnsembleModel(nn.Module):
                 loss.backward()
                 optimizer.step()
 
-            tr.save(self.family_weights.detach().cpu(), f'{self.path}/ensemble_family_weights.pt')
-            print("Saved family weights to ensemble_family_weights.pt")
+            tr.save(self.family_weights.detach().cpu(), self.weights_file)
+            print(f"Saved family weights to {self.weights_file}")
 
     def forward(self, batch):
         pred, _ = self.pred(batch)
@@ -162,7 +154,7 @@ class EnsembleModel(nn.Module):
             all_preds.append(net_preds)
 
         stacked_preds = tr.stack(all_preds)
-        preds, preds_bin = self.combine_ensemble_predictions(stacked_preds)
+        preds, preds_bin = self._combine_ensemble_predictions(stacked_preds)
         return preds, preds_bin
 
     def pred_sliding(self, emb, step=4, use_softmax=False):
@@ -183,10 +175,49 @@ class EnsembleModel(nn.Module):
                 raise ValueError("Model predictions have misaligned window centers.")
 
         stacked_preds = tr.stack(all_preds) 
-        preds, preds_bin = self.combine_ensemble_predictions(stacked_preds)
+        preds, preds_bin = self._combine_ensemble_predictions(stacked_preds)
         return centers, preds.cpu().detach()
 
-    def combine_ensemble_predictions(self, stacked_preds):
+    def _initialize_weights(self, model_dirs, ensemble_weights_path, exp_name=None):
+        """Initializes the weights for the ensemble based on the voting strategy."""
+        # Define the file name based on the voting strategy and experiment name (if provided)
+        if exp_name:
+            file_name = f"{self.voting_strategy}_ensemble_weights_{exp_name}.pt" # TODO: DELETE
+            # file_name = f"{self.voting_strategy}_ensemble_{exp_name}.pt"
+        else:
+            file_name = f"{self.voting_strategy}_ensemble_weights.pt" # TODO: DELETE
+            # file_name = f"{self.voting_strategy}_ensemble.pt"
+
+        # If ensemble_weights_path is provided, use it to load weights
+        if ensemble_weights_path:
+            weights_file = f"{ensemble_weights_path}{file_name}"
+        else:
+            weights_file = f"{self.path}{file_name}"
+
+        if self.voting_strategy == 'weighted_model':
+            if ensemble_weights_path and os.path.exists(weights_file):
+                weights = nn.Parameter(tr.load(weights_file))
+                print(f"Loaded model weights from {ensemble_weights_path}")
+            else:
+                weights = nn.Parameter(tr.rand(len(model_dirs)))
+                if ensemble_weights_path:
+                    print(f"Warning: {ensemble_weights_path} not found, using random init.")
+            return weights, weights_file
+
+        elif self.voting_strategy == 'weighted_families':
+            if ensemble_weights_path and os.path.exists(weights_file):
+                weights = nn.Parameter(tr.load(weights_file))
+                print(f"Loaded family weights from {ensemble_weights_path}")
+            else:
+                weights = nn.Parameter(tr.rand(len(model_dirs), len(self.categories)))
+                if ensemble_weights_path:
+                    print(f"Warning: {ensemble_weights_path} not found, using random init.")
+            return weights, weights_file
+        else:
+            raise ValueError(f"Unknown voting strategy: {self.voting_strategy}")
+
+    def _combine_ensemble_predictions(self, stacked_preds):
+        """ Combines predictions from the ensemble models based on the voting strategy."""
         if self.voting_strategy == 'score_voting':
             pred = tr.mean(stacked_preds, dim=0)
             pred_bin = tr.argmax(pred, dim=1)
