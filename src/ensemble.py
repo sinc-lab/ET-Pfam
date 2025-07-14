@@ -182,11 +182,9 @@ class EnsembleModel(nn.Module):
         """Initializes the weights for the ensemble based on the voting strategy."""
         # Define the file name based on the voting strategy and experiment name (if provided)
         if exp_name:
-            file_name = f"{self.voting_strategy}_ensemble_weights_{exp_name}.pt" # TODO: DELETE
-            # file_name = f"{self.voting_strategy}_ensemble_{exp_name}.pt"
+            file_name = f"{self.voting_strategy}_ensemble_{exp_name}.pt"
         else:
-            file_name = f"{self.voting_strategy}_ensemble_weights.pt" # TODO: DELETE
-            # file_name = f"{self.voting_strategy}_ensemble.pt"
+            file_name = f"{self.voting_strategy}_ensemble.pt"
 
         # If ensemble_weights_path is provided, use it to load weights
         if ensemble_weights_path:
@@ -197,21 +195,21 @@ class EnsembleModel(nn.Module):
         if self.voting_strategy == 'weighted_model':
             if ensemble_weights_path and os.path.exists(weights_file):
                 weights = nn.Parameter(tr.load(weights_file))
-                print(f"Loaded model weights from {ensemble_weights_path}")
+                print(f"Loaded model weights from {weights_file}")
             else:
                 weights = nn.Parameter(tr.rand(len(model_dirs)))
                 if ensemble_weights_path:
-                    print(f"Warning: {ensemble_weights_path} not found, using random init.")
+                    print(f"Warning: {weights_file} not found, using random init.")
             return weights, weights_file
 
         elif self.voting_strategy == 'weighted_families':
             if ensemble_weights_path and os.path.exists(weights_file):
                 weights = nn.Parameter(tr.load(weights_file))
-                print(f"Loaded family weights from {ensemble_weights_path}")
+                print(f"Loaded family weights from {weights_file}")
             else:
                 weights = nn.Parameter(tr.rand(len(model_dirs), len(self.categories)))
                 if ensemble_weights_path:
-                    print(f"Warning: {ensemble_weights_path} not found, using random init.")
+                    print(f"Warning: {weights_file} not found, using random init.")
             return weights, weights_file
         else:
             raise ValueError(f"Unknown voting strategy: {self.voting_strategy}")
