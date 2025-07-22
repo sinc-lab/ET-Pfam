@@ -40,8 +40,8 @@ The test embeddings are available in the compressed file [`mini_test.tar.gz`](ht
 
 ```
 mkdir -vp data/embeddings/ 
-gdown 1B0T5C8XiVheYTw6IEFAf3LOFsupzPLVs --output data/embeddings/mini_test.tar.gz
-tar -xzf data/embeddings/mini_test.tar.gz -C data/embeddings/
+gdown 1B0T5C8XiVheYTw6IEFAf3LOFsupzPLVs --output data/mini_test.tar.gz
+tar -xzf data/mini_test.tar.gz -C data/embeddings/
 ```
 
 This will create the folder, download the data, and extract the embeddings. Note that the download and extraction may take a few minutes.
@@ -68,7 +68,7 @@ python3 test_ensemble.py -v all -m models/mini/ -w models/mini/
 
 Note that this process, with all strategies evaluations, may take approximately up to 10 hours to complete on a single GPU. The results will be saved to `results/mini/ensemble_metrics.csv`. Also, this folder will contain subdirectories with the ensemble results for each individual strategy.
 
-To quickly inspect the output, you can run the following command:
+To quickly inspect the output:
 
 ```
 cat results/mini/ensemble_metrics.csv
@@ -85,8 +85,8 @@ The dev embeddings are available in a compressed file named [`mini_dev.tar.gz`](
 To download and extract the data, run the following commands from the repository root: 
 
 ```
-gdown 15pHIO7J2awgwkgHR5d4MhK2mt4JC1j54 --output data/embeddings/mini_dev.tar.gz
-tar -xzf data/embeddings/mini_dev.tar.gz -C data/embeddings/
+gdown 15pHIO7J2awgwkgHR5d4MhK2mt4JC1j54 --output data/mini_dev.tar.gz
+tar -xzf data/mini_dev.tar.gz -C data/embeddings/
 ```
 
 ### 3.2 Run ensemble training
@@ -111,8 +111,8 @@ Additionally, the `results/mini/` folder will contain subfolders named after eac
 If you want to train your own base models, you first need to download the training embeddings. These are in the file [`mini_train.tar.gz`](https://drive.google.com/file/d/12-NZPjjeiAKqp4A8gQ9KfIpSzuBawdMp/view?usp=drive_link) inside the provided Drive folder. You can obtain them running the following commands from the repository root:
 
 ```
-gdown 12-NZPjjeiAKqp4A8gQ9KfIpSzuBawdMp --output data/embeddings/mini_train.tar.gz
-tar -xzf data/embeddings/mini_train.tar.gz -C data/embeddings/
+gdown 12-NZPjjeiAKqp4A8gQ9KfIpSzuBawdMp --output data/mini_train.tar.gz
+tar -xzf data/mini_train.tar.gz -C data/embeddings/
 ```
 
 ### 4.2 Run model training
@@ -133,7 +133,7 @@ By default, running the training script will train the base models using the set
 
 ## 5. Reproduce results with full Pfam dataset
 
-You can also reproduce the results from the manuscript using the full Pfam dataset. Note that his process is significantly slower due to the large size of the dataset. Before running any steps for the full dataset, edit the config/base.json and set the `dataset` field to `full`, to indicate that you are working with the full Pfam data instead of the mini version.
+You can also reproduce the results from the manuscript using the full Pfam dataset. Note that his process is significantly slower due to the large size of the dataset. 
 
 
 ### 5.1. Test ET-Pfam ensembles
@@ -147,30 +147,38 @@ gdown --folder 18bD2q-iL2MZE2ddH_-jRp_VDZXoZG8QP --output data/
 Next, you need to download the test embeddings from the Drive folder located in [`full_test.tar.gz`](https://drive.google.com/file/d/1HFsSCg-z7NqKwdMfxgj8y1-Ux1X7zJnJ/view?usp=drive_link), the trained base models and the ensemble weights for the full dataset. From the repository root, run:
 
 ```
-gdown 1HFsSCg-z7NqKwdMfxgj8y1-Ux1X7zJnJ --output data/embeddings/full_test.tar.gz
-tar -xzf data/embeddings/full_test.tar.gz -C data/embeddings/
+gdown 1HFsSCg-z7NqKwdMfxgj8y1-Ux1X7zJnJ --output data/full_test.tar.gz
+tar -xzf data/full_test.tar.gz -C data/embeddings/
 gdown 179qTQ-1akdUIkdfjcrxo5X1OOLvEboMl --output models/full.tar.gz
 tar -xzf models/full.tar.gz -C models/
 ```
 
-Once all the files are in place, you can run the ensemble using all voting strategies evaluated in the manuscript:
+Once all the files are in place, set the `dataset` field to `full`, of  `config/base.json` to indicate you are working with the full Pfam data instead of the mini version:
+```
+sed -i 's/mini/full/g' config/base.json
+```
+
+Then you can run the ensemble using all voting strategies evaluated in the manuscript:
 
 ```
 python3 test_ensemble.py -v all -m models/full/ -w models/full/
 ```
 
-This will reproduce the results for the full Pfam dataset, as reported in the paper.
+This will reproduce the results for the full Pfam dataset, as reported in the paper. To verify the results:
+```
+cat results/full/ensemble_metrics.csv
+```
 
 ### 5.2. Train ET-Pfam ensembles
 
-To compute ensemble weights for the full Pfam base models, you need the dev embeddings. Download them from the Drive folder located in [`data/embeddings/full_dev.tar.gz`](https://drive.google.com/file/d/1kRJjLYgzNWwWLHZcZa5oTKiWAEX3cyHn/view?usp=drive_link)  and extract them as follows:
+To compute ensemble weights for the full Pfam base models, you need the dev embeddings [`full_dev.tar.gz`](https://drive.google.com/file/d/1kRJjLYgzNWwWLHZcZa5oTKiWAEX3cyHn/view?usp=drive_link)  and extract them as follows:
 
 ```
-gdown 1kRJjLYgzNWwWLHZcZa5oTKiWAEX3cyHn --output data/embeddings/full_dev.tar.gz
-tar -xzf data/embeddings/full_dev.tar.gz -C data/embeddings/
+gdown 1kRJjLYgzNWwWLHZcZa5oTKiWAEX3cyHn --output data/full_dev.tar.gz
+tar -xzf data/full_dev.tar.gz -C data/embeddings/
 ```
 
-Then run the ensemble training with:
+Then run the ensemble training script with:
 
 ```
 python3 test_ensemble.py -v all -m models/full/
@@ -181,8 +189,8 @@ python3 test_ensemble.py -v all -m models/full/
 To train base models from scratch, download the training embeddings from the Drive folder:
 
 ```
-gdown FILE-ID --output data/embeddings/full_train.tar.gz
-tar -xzf data/embeddings/full_train.tar.gz -C data/embeddings/
+gdown FILE-ID --output data/full_train.tar.gz
+tar -xzf data/full_train.tar.gz -C data/embeddings/
 ```
 
 Then run the training script as follows:
