@@ -5,7 +5,7 @@ import torch as tr
 import torch.multiprocessing
 from torch.utils.data import DataLoader
 from src.dataset import PFamDataset
-from src.model import BaseModel
+from src.basemodel import BaseModel
 torch.multiprocessing.set_sharing_strategy('file_system')
 
 def train(config, categories, output_folder):

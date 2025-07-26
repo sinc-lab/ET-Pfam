@@ -3,7 +3,7 @@ import torch as tr
 import numpy as np
 from torch import nn
 from tqdm import tqdm
-from src.model import BaseModel
+from src.basemodel import BaseModel
 from src.dataset import PFamDataset
 from src.utils import load_config, predict
 import torch.multiprocessing
