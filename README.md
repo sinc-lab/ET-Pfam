@@ -90,7 +90,7 @@ tar -xzf data/mini_dev.tar.gz -C data/embeddings/
 To train the ensemble weights, run the following command:
 
 ```
-python3 traib_ensemble.py -v all -m models/mini/
+python3 train_ensemble.py -v all -m models/mini/
 ```
 
 > [!NOTE]
