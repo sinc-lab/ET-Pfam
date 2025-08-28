@@ -190,7 +190,8 @@ python3 train_ensemble.py -v all -m models/full/
 To train base models from scratch, download the training embeddings from the Drive folder:
 
 ```
-gdown 12-NZPjjeiAKqp4A8gQ9KfIpSzuBawdMp --output data/full_train.tar.gz
+gdown --folder 1pUmkAVIzvb03QwVW6yQm085bRl75ba_9 --output data/full_train/
+cat data/full_train/* > data/full_train.tar.gz
 tar -xzf data/full_train.tar.gz -C data/embeddings/
 ```
 
