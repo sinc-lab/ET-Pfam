@@ -187,15 +187,17 @@ python3 train_ensemble.py -v all -m models/full/
 
 ### 5.3. Train base models
 
-To train base models from scratch, download the training embeddings from the Drive folder:
+To train base models from scratch, first download the training embeddings. Since the dataset is very large, the files are split into multiple zip archives. You can download them directly from the [Drive folder](https://drive.google.com/drive/folders/1pUmkAVIzvb03QwVW6yQm085bRl75ba_9?usp=drive_link).
+
+Once all parts are downloaded, place them inside `data/full_train/` and then run:
 
 ```
-gdown --folder 1pUmkAVIzvb03QwVW6yQm085bRl75ba_9 --output data/full_train/
 cat data/full_train/* > data/full_train.tar.gz
 tar -xzf data/full_train.tar.gz -C data/embeddings/
 ```
+This will concatenate the parts into a single archive and extract the embeddings into the `data/embeddings/` folder.
 
-Then run the training script as follows:
+The training script can be executed as follows:
 
 ```
 python3 train_basemodel.py -o models/full/<model_name>/
