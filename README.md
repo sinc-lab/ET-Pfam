@@ -170,6 +170,8 @@ This will reproduce the results for the full Pfam dataset, as reported in the pa
 cat results/full/ensemble_metrics.csv
 ```
 
+An interactive analysis of the error distributions is provided in the [`error_dist.ipynb`](https://colab.research.google.com/github/sinc-lab/ET-Pfam/blob/main/error_dist.ipynb) notebook.
+
 ### 5.2. Train ET-Pfam ensembles
 
 To compute ensemble weights for the full Pfam base models, you need the dev embeddings [`full_dev.tar.gz`](https://drive.google.com/file/d/1kRJjLYgzNWwWLHZcZa5oTKiWAEX3cyHn/view?usp=drive_link)  and extract them as follows:
